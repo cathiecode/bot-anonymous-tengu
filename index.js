@@ -13,8 +13,7 @@ client.on('message', async (msg) => {
   console.log("メッセージを受信")
   const pure_content = msg.content.replace(/<.+?>\s?|^\s|\s$/gm, "")
   const converted_content = pure_content.replace(/^/gm, ":japanese_goblin: ")
-  msg.channel.send(converted_content)
-  msg.delete();
+  await msg.channel.send(converted_content)
 });
 
 client.login(TOKEN);
