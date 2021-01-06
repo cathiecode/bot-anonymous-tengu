@@ -11,7 +11,7 @@ client.on('ready', () => {
 client.on('message', async (msg) => {
   if (msg.author.bot || msg.mentions.everyone || !msg.mentions.has(client.user)) return;
   console.log("メッセージを受信")
-  const pure_content = msg.content.replace(/<.+?>\s?|^\s|\s$/gm, "")
+  const pure_content = msg.content.replace(/\s?<.+?>\s?|^\s|\s$/gm, "")
   //const converted_content = pure_content.replace(/^/gm, ":japanese_goblin: ")
   try {
     await msg.channel.send(pure_content)
