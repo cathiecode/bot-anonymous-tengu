@@ -17,7 +17,6 @@ const run = async (interaction) => {
     return;
   }
   await interaction.channel.send(message);
-  await interaction.deleteReply();
 }
 
 module.exports = {data, run};
