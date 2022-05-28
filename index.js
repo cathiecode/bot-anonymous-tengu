@@ -1,29 +1,46 @@
-const Discord = require('discord.js')
+const { Client, Intents } = require("discord.js");
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
+const fs = require('node:fs');
 
-const client = new Discord.Client()
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.DISCORD_CLIENT_ID;
 
-const TOKEN = process.env.DISCORD_TOKEN
+const commands = [];
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
-client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
-});
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+	commands.push(command);
+}
 
-client.on('message', async (msg) => {
-  if (msg.author.bot || msg.mentions.everyone || !msg.mentions.has(client.user)) return;
-  console.log("メッセージを受信")
-  const pure_content = msg.content.replace(/\s?<.+?>\s?|^\s|\s$/gm, "")
-  //const converted_content = pure_content.replace(/^/gm, ":japanese_goblin: ")
-  try {
-    await msg.channel.send(pure_content)
-  } finally {
-    try {
-      await msg.delete({
-        timeout: 3000
-      })
-    } catch(e) {
-      console.log("Already deleted")
+const rest = new REST({ version: '9' }).setToken(token);
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+
+(async () => {
+	try {
+		console.log('Started refreshing application (/) commands.');
+
+		await rest.put(
+      Routes.applicationCommands(clientId),
+			{ body: commands.map(command => command.data.toJSON()) },
+		);
+
+		console.log('Successfully reloaded application (/) commands.');
+	} catch (error) {
+		console.error(error);
+	}
+
+  client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+    
+    const command = commands.find(command => command.data.name === interaction.commandName);
+    if (!command) {
+      console.error("Unknown command:", interaction.commandName);
+      return;
     }
-  }
-});
+    command.run(interaction);
+  });
 
-client.login(TOKEN);
+  console.log("Logged in:", await client.login(token));
+})();
